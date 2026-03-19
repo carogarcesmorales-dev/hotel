@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego: Problemas en el Hotel</title>
+    <!-- Usamos Tailwind CSS vía CDN para que el diseño sea profesional sin necesidad de archivos extra -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos para el efecto de giro de las tarjetas */
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
+
+    <!-- Navegación -->
+    <nav class="bg-indigo-700 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-lg font-bold flex items-center gap-2">
+                <span>🏨</span> Hotel Español
+            </h1>
+            <div class="flex gap-4">
+                <button onclick="showSection('vocab')" class="px-3 py-1 rounded hover:bg-indigo-600 transition">Vocabulario</button>
+                <button onclick="showSection('roleplay')" class="px-3 py-1 rounded hover:bg-indigo-600 transition">Juego de Rol</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-4 md:p-8">
+        
+        <!-- SECCIÓN 1: VOCABULARIO -->
+        <section id="vocab-section" class="space-y-6">
+            <header class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-indigo-900">Práctica de Vocabulario</h2>
+                <p class="text-gray-600 mt-2">Haz clic en las tarjetas para traducir del finlandés al español.</p>
+            </header>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="vocab-grid">
+                <!-- Las tarjetas se generan aquí con JavaScript -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: JUEGO DE ROL -->
+        <section id="roleplay-section" class="hidden animate-fade-in">
+            <div class="bg-white p-6 md:p-10 rounded-2xl shadow-xl border border-gray-200">
+                <h2 class="text-3xl font-bold text-green-700 mb-6 flex items-center gap-2">
+                    <span>📞</span> Recepción, ¿dígame?
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- Guía para el alumno -->
+                    <div class="space-y-4">
+                        <div class="bg-green-50 p-4 rounded-xl border-l-4 border-green-500">
+                            <h3 class="font-bold text-green-800 mb-2 underline">Estructura de la llamada:</h3>
+                            <div class="text-sm space-y-3 text-green-900">
+                                <p><strong>Tú:</strong> "Llamo de la habitación [número]..."</p>
+                                <p><strong>Recepcionista:</strong> "Lo siento. Enseguida llamo al encargado de mantenimiento."</p>
+                                <p><strong>Tú:</strong> "También [otro problema]..."</p>
+                                <p><strong>Recepcionista:</strong> "No se preocupe. Ahora mismo lo solucionamos."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generador interactivo -->
+                    <div class="flex flex-col items-center justify-center p-8 bg-indigo-50 rounded-2xl border-2 border-dashed border-indigo-200">
+                        <span class="bg-indigo-200 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-4">SITUACIÓN PARA EL HUÉSPED</span>
+                        <div id="random-problem" class="text-2xl font-semibold text-center text-gray-800 mb-8 min-h-[4rem]">
+                            Haz clic para empezar
+                        </div>
+                        <button onclick="generateProblem()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transform active:scale-95 transition shadow-lg">
+                            Generar Problema
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-10 text-gray-400 text-sm">
+        Material pedagógico para clases de español
+    </footer>
+
+    <script>
+        // Datos extraídos de tus archivos PDF
+        const vocabData = [
+            { es: "La habitación es muy pequeña", fi: "La habitación es muy pequeña (Huone on tosi pieni)" },
+            { es: "La cama es dura", fi: "Sänky on kova" },
+            { es: "La habitación no está limpia", fi: "Huone ei ole puhdas / siisti" },
+            { es: "No hay agua caliente", fi: "Ei ole kuumaa vettä" },
+            { es: "El televisor no funciona", fi: "Televisio ei toimi" },
+            { es: "El minibar está vacío", fi: "Minibaari on tyhjä" },
+            { es: "No hay toallas", fi: "Ei ole pyyhkeitä" },
+            { es: "El aire acondicionado no funciona", fi: "Ilmastointi ei toimi" },
+            { es: "Hay mucho ruido", fi: "On kovasti meteliä" },
+            { es: "La playa está lejos", fi: "Ranta on kaukana" }
+        ];
+
+        const extraProblems = [
+            "No hay papel higiénico",
+            "La luz no funciona",
+            "La ventana está abierta y hace frío",
+            "La llave no funciona",
+            "La habitación está sucia",
+            "No hay jabón en el baño"
+        ];
+
+        // Cambiar entre secciones
+        function showSection(section) {
+            document.getElementById('vocab-section').classList.toggle('hidden', section !== 'vocab');
+            document.getElementById('roleplay-section').classList.toggle('hidden', section !== 'roleplay');
+        }
+
+        // Crear las tarjetas dinámicamente
+        function createCards() {
+            const grid = document.getElementById('vocab-grid');
+            vocabData.forEach(item => {
+                const container = document.createElement('div');
+                container.className = 'card-flip h-40';
+                container.innerHTML = `
+                    <div class="card-inner" onclick="this.classList.toggle('is-flipped')">
+                        <div class="card-front bg-white border-2 border-gray-100">
+                            <span class="absolute top-2 left-3 text-[10px] font-bold text-gray-300">FINLANDÉS</span>
+                            <p class="text-lg font-medium px-4">${item.fi}</p>
+                        </div>
+                        <div class="card-back bg-indigo-600 text-white font-bold">
+                            <span class="absolute top-2 left-3 text-[10px] font-bold text-indigo-300">ESPAÑOL</span>
+                            <p class="text-xl px-4">${item.es}</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(container);
+            });
+        }
+
+        // Generar problema aleatorio para el Roleplay
+        function generateProblem() {
+            const all = [...vocabData.map(v => v.es), ...extraProblems];
+            const random = all[Math.floor(Math.random() * all.length)];
+            const el = document.getElementById('random-problem');
+            
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.innerText = `"${random}"`;
+                el.style.opacity = 1;
+            }, 150);
+        }
+
+        // Iniciar
+        window.onload = () => {
+            createCards();
+        };
+    </script>
+</body>
+</html>
